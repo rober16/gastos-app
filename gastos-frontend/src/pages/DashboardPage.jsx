@@ -20,6 +20,11 @@ const GLOBAL_CSS = `
   body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
          background: #f0f2f8; color: #1a1a2e; }
 
+  html, body, #root {
+    overflow-x: hidden !important;
+    max-width: 100vw;
+  }
+    
   .gapp-header {
     background: linear-gradient(135deg, #5b50e8 0%, #7c6ff7 100%);
     color: #fff;

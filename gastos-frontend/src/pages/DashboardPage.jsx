@@ -24,7 +24,7 @@ const GLOBAL_CSS = `
     overflow-x: hidden !important;
     max-width: 100vw;
   }
-    
+
   .gapp-header {
     background: linear-gradient(135deg, #5b50e8 0%, #7c6ff7 100%);
     color: #fff;
@@ -378,7 +378,6 @@ export default function DashboardPage() {
           <div className="gapp-header-top">
             <div className="gapp-logo">
               💰 Mis Gastos
-              <span>Personal Finance</span>
             </div>
             <button className="gapp-btn-logout" onClick={logout}>Salir</button>
           </div>

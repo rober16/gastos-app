@@ -24,8 +24,11 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
-      {children}
-    </AuthContext.Provider>
+    {loading
+      ? <Spinner splash />
+      : children
+    }
+  </AuthContext.Provider>
   );
 }
 

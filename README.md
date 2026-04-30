@@ -81,6 +81,3 @@ gastos-app/
     │   └── main.jsx
     └── package.json
 ```
-| Frontend | Vercel | `gastos-frontend` |
-
-Cada `git push` a la rama `main` redespliega ambos servicios automáticamente.

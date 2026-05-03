@@ -13,9 +13,11 @@ const fmt = (n) =>
 
 const fmtDate = (d) => {
   if (!d) return '';
-  return new Date(d + 'T12:00:00').toLocaleDateString('es-AR', {
-    day: '2-digit', month: '2-digit', year: 'numeric'
-  });
+  // Supabase puede devolver "2026-04-20" o "2026-04-20T00:00:00.000Z"
+  const clean = String(d).slice(0, 10); // tomar solo YYYY-MM-DD
+  const [year, month, day] = clean.split('-');
+  if (!year || !month || !day) return '';
+  return `${day}/${month}/${year}`;
 };
 
 const today        = () => new Date().toISOString().split('T')[0];

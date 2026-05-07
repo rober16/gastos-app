@@ -9,13 +9,25 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Procesa la sesión actual (incluyendo el token del link de confirmación)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+
+    // Escucha cambios: login, logout, confirmación de email, token refresh
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+
+      // Cuando el usuario confirma el email, redirigir al dashboard
+      if (event === 'SIGNED_IN') {
+        // Limpiar el hash feo de la URL sin recargar la página
+        if (window.location.hash.includes('access_token')) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 

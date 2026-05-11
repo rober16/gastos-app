@@ -8,13 +8,13 @@ import {
   Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 
+/* ── Helpers ──────────────────────────────────────────────────────────────── */
 const fmt = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(n ?? 0);
 
 const fmtDate = (d) => {
   if (!d) return '';
-  // Supabase puede devolver "2026-04-20" o "2026-04-20T00:00:00.000Z"
-  const clean = String(d).slice(0, 10); // tomar solo YYYY-MM-DD
+  const clean = String(d).slice(0, 10);
   const [year, month, day] = clean.split('-');
   if (!year || !month || !day) return '';
   return `${day}/${month}/${year}`;
@@ -23,6 +23,7 @@ const fmtDate = (d) => {
 const today        = () => new Date().toISOString().split('T')[0];
 const currentMonth = () => today().slice(0, 7);
 
+/* ── Global CSS ───────────────────────────────────────────────────────────── */
 const GLOBAL_CSS = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body, #root { overflow-x: hidden; max-width: 100vw; }
@@ -72,11 +73,15 @@ const GLOBAL_CSS = `
   .gapp-cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
   @media (min-width: 480px) { .gapp-cat-grid { grid-template-columns: repeat(3, 1fr); } }
   @media (min-width: 720px) { .gapp-cat-grid { grid-template-columns: repeat(4, 1fr); } }
-  .gapp-cat-card { background: #fff; border-radius: 12px; padding: 14px 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-top: 3px solid transparent; transition: transform 0.15s; }
-  .gapp-cat-card:hover { transform: translateY(-2px); }
+  .gapp-cat-card { background: #fff; border-radius: 12px; padding: 14px 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-top: 3px solid transparent; transition: transform 0.15s, box-shadow 0.15s; position: relative; }
+  .gapp-cat-card.clickable { cursor: pointer; }
+  .gapp-cat-card.clickable:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.11); }
+  .gapp-cat-card.clickable:active { transform: translateY(-1px); }
   .gapp-cat-icon { font-size: 26px; margin-bottom: 6px; }
   .gapp-cat-label { font-size: 11px; color: #888; margin-bottom: 4px; line-height: 1.3; }
   .gapp-cat-amount { font-size: 13px; font-weight: 700; }
+  .gapp-cat-badge { position: absolute; top: 7px; right: 7px; font-size: 10px; font-weight: 700; color: #fff; border-radius: 20px; padding: 2px 6px; line-height: 1.5; min-width: 18px; text-align: center; }
+  .gapp-cat-hint { font-size: 10px; color: #bbb; margin-top: 5px; display: flex; align-items: center; justify-content: center; gap: 3px; }
   .gapp-quick-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
   .gapp-btn-add { flex: 1; min-width: 140px; padding: 13px 16px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer; transition: opacity 0.2s, transform 0.15s; box-shadow: 0 3px 10px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; gap: 8px; }
   .gapp-btn-add:hover { opacity: 0.9; transform: translateY(-1px); }
@@ -119,24 +124,33 @@ const GLOBAL_CSS = `
   .gapp-empty-icon { font-size: 40px; margin-bottom: 10px; }
   .gapp-chart-card { background: #fff; border-radius: 14px; padding: 20px 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 16px; }
   .gapp-chart-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: #1a1a2e; }
+  .gapp-cat-modal-list { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; padding-right: 2px; scrollbar-width: thin; scrollbar-color: #e0ddf5 transparent; }
+  .gapp-cat-modal-list::-webkit-scrollbar { width: 4px; }
+  .gapp-cat-modal-list::-webkit-scrollbar-thumb { background: #e0ddf5; border-radius: 4px; }
 `;
 
+/* ── Component ────────────────────────────────────────────────────────────── */
 export default function DashboardPage() {
   const { user, logout } = useAuth();
 
-  const [month, setMonth]             = useState(currentMonth());
-  const [expenses, setExpenses]       = useState([]);
-  const [incomes, setIncomes]         = useState([]);
-  const [view, setView]               = useState('dashboard');
-  const [showExpForm, setShowExpForm] = useState(false);
-  const [showIncForm, setShowIncForm] = useState(false);
-  const [editItem, setEditItem]       = useState(null);
-  const [loadingData, setLoadingData] = useState(true);
-  const [saving, setSaving]           = useState(false);
-  const [deletingId, setDeletingId]   = useState(null);
+  const [month, setMonth]                 = useState(currentMonth());
+  const [expenses, setExpenses]           = useState([]);
+  const [incomes, setIncomes]             = useState([]);
+  const [view, setView]                   = useState('dashboard');
+  const [showExpForm, setShowExpForm]     = useState(false);
+  const [showIncForm, setShowIncForm]     = useState(false);
+  const [editItem, setEditItem]           = useState(null);
+  const [loadingData, setLoadingData]     = useState(true);
+  const [saving, setSaving]               = useState(false);
+  const [deletingId, setDeletingId]       = useState(null);
+  const [categoryModal, setCategoryModal] = useState(null);
 
-  const [expForm, setExpForm] = useState({ amount: '', category: 'credit_card', subcategory: '', description: '', date: today() });
-  const [incForm, setIncForm] = useState({ amount: '', type: 'salary', description: '', date: today() });
+  const [expForm, setExpForm] = useState({
+    amount: '', category: 'credit_card', subcategory: '', description: '', date: today()
+  });
+  const [incForm, setIncForm] = useState({
+    amount: '', type: 'salary', description: '', date: today()
+  });
 
   useEffect(() => {
     const id = 'gapp-styles';
@@ -232,14 +246,12 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* Overlay al guardar */}
       {saving && <Spinner fullscreen message={editItem ? 'Actualizando...' : 'Guardando...'} />}
-
-      {/* Overlay en la carga inicial (primera vez o sin datos) */}
       {loadingData && expenses.length === 0 && incomes.length === 0 && (
         <Spinner fullscreen message="Cargando datos del mes..." />
       )}
 
+      {/* HEADER */}
       <header className="gapp-header">
         <div className="gapp-header-inner">
           <div className="gapp-header-top">
@@ -253,6 +265,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {/* NAV */}
       <nav className="gapp-nav">
         <div className="gapp-nav-inner">
           {[
@@ -290,8 +303,7 @@ export default function DashboardPage() {
 
             <div className="gapp-section-header">
               <h2 className="gapp-section-title">
-                Gastos por categoría
-                {loadingData && <Spinner dark />}
+                Gastos por categoría {loadingData && <Spinner dark />}
               </h2>
             </div>
 
@@ -308,14 +320,29 @@ export default function DashboardPage() {
             ) : (
               <div className="gapp-cat-grid">
                 {CATEGORIES.map(cat => {
-                  const total = expenses.filter(e => e.category === cat.id).reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+                  const catExpenses = expenses.filter(e => e.category === cat.id);
+                  const total = catExpenses.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+                  const count = catExpenses.length;
+                  const hasData = total > 0;
                   return (
-                    <div key={cat.id} className="gapp-cat-card" style={{ borderTopColor: cat.color }}>
+                    <div
+                      key={cat.id}
+                      className={`gapp-cat-card${hasData ? ' clickable' : ''}`}
+                      style={{ borderTopColor: cat.color }}
+                      onClick={() => hasData && setCategoryModal(cat)}
+                      title={hasData ? `Ver ${count} gasto${count !== 1 ? 's' : ''} de ${cat.label}` : undefined}
+                    >
+                      {count > 0 && (
+                        <div className="gapp-cat-badge" style={{ background: cat.color }}>{count}</div>
+                      )}
                       <div className="gapp-cat-icon">{cat.icon}</div>
                       <div className="gapp-cat-label">{cat.label}</div>
-                      <div className="gapp-cat-amount" style={{ color: total > 0 ? cat.color : '#ccc' }}>
-                        {total > 0 ? fmt(total) : '—'}
+                      <div className="gapp-cat-amount" style={{ color: hasData ? cat.color : '#ccc' }}>
+                        {hasData ? fmt(total) : '—'}
                       </div>
+                      {hasData && (
+                        <div className="gapp-cat-hint"><span>👆</span> ver detalle</div>
+                      )}
                     </div>
                   );
                 })}
@@ -560,6 +587,113 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL DETALLE CATEGORÍA */}
+      {categoryModal && (() => {
+        const catExpenses = expenses
+          .filter(e => e.category === categoryModal.id)
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+        const catTotal = catExpenses.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+
+        return (
+          <div className="gapp-modal-overlay" onClick={e => e.target === e.currentTarget && setCategoryModal(null)}>
+            <div className="gapp-modal" style={{ maxWidth: 520 }}>
+              <div className="gapp-modal-drag" />
+
+              {/* Header de la modal */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, paddingBottom: 14, borderBottom: `2px solid ${categoryModal.color}22` }}>
+                <div style={{ width: 48, height: 48, borderRadius: 14, flexShrink: 0, background: `${categoryModal.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
+                  {categoryModal.icon}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: '#1a1a2e' }}>{categoryModal.label}</div>
+                  <div style={{ fontSize: 13, color: '#888', marginTop: 1 }}>
+                    {catExpenses.length} gasto{catExpenses.length !== 1 ? 's' : ''} este mes
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 11, color: '#aaa', marginBottom: 2 }}>Total</div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: categoryModal.color }}>{fmt(catTotal)}</div>
+                </div>
+                <button
+                  onClick={() => setCategoryModal(null)}
+                  style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: '#f0f0f5', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#666', lineHeight: 1 }}
+                >×</button>
+              </div>
+
+              {/* Lista scrolleable */}
+              <div className="gapp-cat-modal-list">
+                {catExpenses.map(exp => {
+                  const isDeleting = deletingId === exp.id;
+                  return (
+                    <div key={exp.id} className={`gapp-list-item${isDeleting ? ' deleting' : ''}`} style={{ borderLeft: `3px solid ${categoryModal.color}` }}>
+                      <div className="gapp-list-info">
+                        <div className="gapp-list-title">
+                          {exp.subcategory
+                            ? <span>{exp.subcategory}</span>
+                            : <span style={{ color: '#bbb', fontStyle: 'italic', fontWeight: 400 }}>Sin subcategoría</span>
+                          }
+                        </div>
+                        {exp.description && <div className="gapp-list-sub">{exp.description}</div>}
+                        <div className="gapp-list-date">{fmtDate(exp.date)}</div>
+                      </div>
+                      <div className="gapp-list-amount" style={{ color: categoryModal.color }}>{fmt(exp.amount)}</div>
+                      <div className="gapp-list-actions">
+                        {isDeleting ? <Spinner dark /> : (
+                          <>
+                            <button
+                              className="gapp-btn-icon"
+                              style={{ background: '#ede9ff', color: '#5b50e8' }}
+                              disabled={!!deletingId}
+                              onClick={() => {
+                                setCategoryModal(null);
+                                setTimeout(() => openEditExpense(exp), 150);
+                              }}
+                            >✏️</button>
+                            <button
+                              className="gapp-btn-icon"
+                              style={{ background: '#fdecea', color: '#e74c3c' }}
+                              disabled={!!deletingId}
+                              onClick={async () => {
+                                if (!window.confirm('¿Eliminar este gasto?')) return;
+                                setDeletingId(exp.id);
+                                try {
+                                  await api.delete(`/expenses/${exp.id}`);
+                                  await loadData();
+                                  const remaining = expenses.filter(e => e.category === categoryModal.id && e.id !== exp.id);
+                                  if (remaining.length === 0) setCategoryModal(null);
+                                } finally { setDeletingId(null); }
+                              }}
+                            >🗑️</button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Footer */}
+              <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid #f0f0f0' }}>
+                <button
+                  className="gapp-btn-add"
+                  style={{ background: `linear-gradient(135deg, ${categoryModal.color}ee, ${categoryModal.color}aa)`, width: '100%', minWidth: 'auto' }}
+                  onClick={() => {
+                    setCategoryModal(null);
+                    setTimeout(() => {
+                      setExpForm(prev => ({ ...prev, category: categoryModal.id }));
+                      setEditItem(null);
+                      setShowExpForm(true);
+                    }, 150);
+                  }}
+                >
+                  + Agregar gasto en {categoryModal.label}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }

@@ -289,7 +289,7 @@ export default function DashboardPage() {
             { key: 'dashboard', label: '📊 Resumen'  },
             { key: 'expenses',  label: '💸 Gastos'   },
             { key: 'incomes',   label: '💰 Ingresos' },
-            {/*{ key: 'savings',   label: '🏦 Ahorros'  },*/}
+            { key: 'savings',   label: '🏦 Ahorros'  },
             { key: 'charts',    label: '📈 Gráficos' },
           ].map(t => (
             <button key={t.key} className={`gapp-tab${view === t.key ? ' active' : ''}`} onClick={() => setView(t.key)}>{t.label}</button>

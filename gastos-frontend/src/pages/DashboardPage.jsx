@@ -456,7 +456,7 @@ export default function DashboardPage() {
         )}
 
         {/* AHORROS */}
-        {view === 'savings' && <SavingsPage />}
+        {/* {view === 'savings' && <SavingsPage />} */}
 
         {/* GRAFICOS */}
         {view === 'charts' && (

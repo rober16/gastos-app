@@ -1,7 +1,7 @@
 // gastos-frontend/src/pages/SavingsPage.jsx
 import { useState, useEffect, useCallback } from 'react';
 import api from '../api';
-import Spinner from '../components/Spinner';
+import Spinner from './Spinner';
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
 const fmt = (n) =>

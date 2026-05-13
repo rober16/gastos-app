@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api';
 import { CATEGORIES, INCOME_TYPES, getCategoryById, getIncomeTypeById } from '../categories';
 import Spinner from '../components/Spinner';
-import SavingsPage from './SavingsPage';
+import SavingsPage from '../components/SavingsPage';
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
   Tooltip, ResponsiveContainer, Legend

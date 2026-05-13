@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api';
 import { CATEGORIES, INCOME_TYPES, getCategoryById, getIncomeTypeById } from '../categories';
 import Spinner from '../components/Spinner';
-import SavingsPage from '../components/SavingsPage';
+import SavingsPage from './SavingsPage';
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
   Tooltip, ResponsiveContainer, Legend
@@ -289,7 +289,7 @@ export default function DashboardPage() {
             { key: 'dashboard', label: '📊 Resumen'  },
             { key: 'expenses',  label: '💸 Gastos'   },
             { key: 'incomes',   label: '💰 Ingresos' },
-            {/*{ key: 'savings',   label: '🏦 Ahorros'  },*/}
+            { key: 'savings',   label: '🏦 Ahorros'  },
             { key: 'charts',    label: '📈 Gráficos' },
           ].map(t => (
             <button key={t.key} className={`gapp-tab${view === t.key ? ' active' : ''}`} onClick={() => setView(t.key)}>{t.label}</button>
